@@ -194,6 +194,7 @@ def init(
     log_file: str = None,
     agg_fqdn: str = None,
     col_names=None,
+    workspace_prefix: str = None
 ):
     """
     Initialize the openfl package.
@@ -226,14 +227,17 @@ def init(
         col_names (list[str]): The names of the collaborators that will be
             created. These collaborators will be set up to participate in the
             experiment, but are not required to. Defaults to None.
+        workspace_prefix (str): The workspace folder name.
 
     Returns:
         None
     """
     if col_names is None:
         col_names = ["one", "two"]
-    workspace.create(WORKSPACE_PREFIX, workspace_template)
-    os.chdir(WORKSPACE_PREFIX)
+    workspace_prefix = workspace_prefix if workspace_prefix else WORKSPACE_PREFIX
+    print(f"workspace_prefix: {workspace_prefix}")
+    workspace.create(workspace_prefix, workspace_template)
+    os.chdir(workspace_prefix)
     workspace.certify()
     aggregator.generate_cert_request(agg_fqdn)
     aggregator.certify(agg_fqdn, silent=True)
