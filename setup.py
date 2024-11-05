@@ -142,7 +142,7 @@ setup(
         'openfl-docker',
         'openfl-gramine',
         'openfl-tutorials',
-        'openfl-workspace',
+        'openfl-workspace'
     ],
     include_package_data=True,
     install_requires=[
