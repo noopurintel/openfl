@@ -1,3 +1,6 @@
+# Copyright 2020-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import pytest
 import os
 import json
@@ -6,7 +9,8 @@ import xml.etree.ElementTree as ET
 import logging
 from utils.logger import configure_logging
 from utils.logger import logger as log
-from utils.argparse_helper import parse_arguments, get_default_repo_dir
+from utils.conftest_helper import parse_arguments
+from openfl.utilities.utils import getfqdn_env
 
 
 def pytest_addoption(parser):
@@ -196,36 +200,17 @@ def pytest_sessionfinish(session, exitstatus):
 #     global_config['test_name'] = test_name
 
 
-# @pytest.fixture(scope="function")
-# def setup_ui(federation, global_config):
-#     browser_type = global_config['browser_type']
-#     setup_ui = UISetup(federation, browser_type)
-#     yield setup_ui
-#     setup_ui.quit_driver()
+@pytest.fixture(scope="module")
+def federation(request, pytestconfig):
+    print("Fixture for federation")
+    args = parse_arguments()
+    num_collaborators = pytestconfig.getoption("--num-collaborators") or args.num_collaborators
+    num_rounds = pytestconfig.getoption("--num-rounds") or args.num_rounds
+    model_name = pytestconfig.getoption("--model-name") or args.model_name
 
-
-# @pytest.fixture(scope="module")
-# def federation(request, global_config):
-#     # load the existing deployment if it exists
-#     cached_deployment = utils_helper.load_deployment()
-#     # Deploy federation
-#     num_collaborators = global_config['num_collaborators']
-
-#     deployment = init_deployment(num_collaborators, global_config)
+    deployment = create_workspace(num_collaborators, global_config)
+    assert create_workspace, "Failed to create workspace"
 #     init_participants(deployment)
-
-#     if cached_deployment and deployment.check_az_deployment_exists():
-#         # load the deployment information from the cache
-#         deployment.governor.token = cached_deployment['governor_token']
-#         deployment.aggregator.token = cached_deployment['aggregator_token']
-#         deployment.model_owner.token = cached_deployment['model_owner_token']
-#         # Initialize tokens for all collaborators
-#         for i, collaborator in enumerate(deployment.collaborators):
-#             collaborator.token = cached_deployment['collaborator_tokens'][i]
-
-#         log.info("Loaded deployment information from cache")
-#         yield deployment
-#         return
 
 #     utils_helper.create_ssh_key_pairs()
 #     if not deploy_federation(deployment, global_config['test_mode']):
@@ -252,3 +237,5 @@ def pytest_sessionfinish(session, exitstatus):
 #             log.info("Federation deleted")
 
 #     request.addfinalizer(finalizer)
+
+
