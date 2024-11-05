@@ -8,22 +8,25 @@ from utils.logger import logger as log
 
 
 def run_command_background(
-    cmd, return_error=True, print_stdout=True, work_dir=None, redirect_to_file=None, check_sleep=1
+    cmd, return_error=False, print_stdout=False, work_dir=None, redirect_to_file=None, check_sleep=1
 ):
-    """
-    Execute a command and let it run in the background.
+    """Execute a command and let it run in background.
 
-    Parameters:
-    cmd (str or list): The command to run.
-    return_error (bool): Whether to return errors or raise them.
-    print_stdout (bool): Whether to print the standard output.
-    work_dir (str): The working directory for the command.
-    redirect_to_file (str): Path to a file to redirect stdout and stderr.
-    check_sleep (int): Time to sleep before checking if the process has started.
+    Args:
+        cmd (Union[str, list]): Command to execute.
+        Can be a shell type string or a list of command and args.
+            e.g. ['ps', '-ef'], ['/bin/bash/', script.sh], './script.sh'
+        return_error: Whether to return error message. This has no effect.
+        print_stdout: If True and the process completes immediately, print the stdout.
+            This is obsolete. Will always print debug output and errors.
+            Output will be truncated to 10 lines.
+        work_dir: Directory from which to run the command. Current directory if None.
+        redirect_to_file: The file descriptor to which the STDERR and STDOUT will be written.
+        check_sleep: Time in seconds to sleep before polling to make sure
+            the background process is still running.
 
     Returns:
-    process: The subprocess object if the command is running in the background.
-    tuple: (status, output) if the command completes instantly.
+        Popen object of the subprocess. None, if the command completed immediately.
     """
     if isinstance(cmd, list):
         shell = False
@@ -31,58 +34,40 @@ def run_command_background(
         shell = True
 
     if redirect_to_file:
-        with open(redirect_to_file, 'w') as file:
-            try:
-                process = subprocess.Popen(
-                    cmd, stdout=file, stderr=subprocess.STDOUT, shell=shell, text=True, cwd=work_dir
-                )
-            except Exception as e:
-                log.error(f"Failed to start command '{cmd}': {str(e)}")
-                log.error(f"Error Traceback: {traceback.format_exc()}")
-                if return_error:
-                    return None
-                else:
-                    raise
+        output_redirect = redirect_to_file
+        error_redirect = subprocess.STDOUT
     else:
-        try:
-            process = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, text=True, cwd=work_dir
-            )
-        except Exception as e:
-            log.error(f"Failed to start command '{cmd}': {str(e)}")
-            log.error(f"Error Traceback: {traceback.format_exc()}")
-            if return_error:
-                return None
-            else:
-                raise
-
-    log.info(f"Running command in the background: {cmd}")
-
+        output_redirect = subprocess.PIPE
+        error_redirect = subprocess.PIPE
+    process = subprocess.Popen(
+        cmd, stdout=output_redirect, stderr=error_redirect, shell=shell, text=True, cwd=work_dir
+    )
     time.sleep(check_sleep)
     return_code = process.poll()
-
     if return_code is None:
         return process
     elif return_code != 0:
         if redirect_to_file:
-            log.info("The background process has been writing STDERR and STDOUT to the file provided.")
+            log.info(
+                "The background process has been writing STDERR and STDOUT to a file passed in as 'redirect_to_file' arg"
+            )
         else:
             error = process.stderr.read().rstrip("\n")
-            if return_error:
-                return return_code, error
-            else:
-                log.info(f"Error is: {error}")
-                log.info(f"Error Traceback: {traceback.format_exc()}")
-                raise subprocess.CalledProcessError(returncode=return_code, cmd=cmd)
+            log.warning(f"Error is: {error}")
+            log.error(f"Error Traceback: {traceback.print_exc()}")
+            raise subprocess.CalledProcessError(returncode=return_code, cmd=cmd)
     else:
-        log.info("Process for Command completed instantly.")
+        log.warning("Process for Command completed instantly.")
         if redirect_to_file:
-            log.info("The background process has been writing STDERR and STDOUT to the file provided.")
+            log.info(
+                "The background process has been writing STDERR and STDOUT to a file passed in as 'redirect_to_file' arg"
+            )
         else:
-            output = process.stdout.read().rstrip("\n")
-            if print_stdout:
+            output = process.stdout.read().rstrip("\n").split("\n")
+            if print_stdout and output is not None:
                 log.info(f"Command to run - {cmd}  output - {output}")
-            return return_code, output
+        return None
+
 
 def run_command(
     cmd, return_error=True, print_stdout=False, work_dir=None, timeout=None, check=True

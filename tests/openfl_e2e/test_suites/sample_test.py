@@ -11,7 +11,7 @@ def add(a, b):
 
 
 # Test function
-def test_add():
+def test_add(fx_federation):
     log.info("Running test_add")
     assert add(1, 2) == 3
     assert add(-1, 1) == 0

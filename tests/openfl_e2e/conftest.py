@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+import collections
 import os
 import json
 import shutil
@@ -10,20 +11,26 @@ import logging
 from utils.logger import configure_logging
 from utils.logger import logger as log
 from utils.conftest_helper import parse_arguments
-from openfl.utilities.utils import getfqdn_env
+import utils.constants as constants
+import models.participants as participants
+
+federation_fixture = collections.namedtuple("federation_fixture", "model_owner, aggregator, collaborators, model_name, workspace_path, results_dir")
 
 
 def pytest_addoption(parser):
     parser.addini("results_dir", "Directory to store test results", default="results")
     parser.addini("log_level", "Logging level", default="DEBUG")
     parser.addoption(
-        "--num_collaborators", action="store", type=int, default=2, help="Number of collaborators"
+        "--results_dir", action="store", type=str, default="results", help="Results directory"
     )
     parser.addoption(
-        "--num_rounds", action="store", type=int, default=5, help="Number of rounds to train"
+        "--num_collaborators", action="store", type=int, default=constants.NO_OF_COLLABORATORS, help="Number of collaborators"
     )
     parser.addoption(
-        "--model_name", action="store", type=str, default="torch_cnn_mnist", help="Model name"
+        "--num_rounds", action="store", type=int, default=constants.NO_OF_ROUNDS, help="Number of rounds to train"
+    )
+    parser.addoption(
+        "--model_name", action="store", type=str, default=constants.DEFAULT_MODEL_NAME, help="Model name"
     )
 
 
@@ -201,30 +208,43 @@ def pytest_sessionfinish(session, exitstatus):
 
 
 @pytest.fixture(scope="module")
-def federation(request, pytestconfig):
-    print("Fixture for federation")
+def fx_federation(request, pytestconfig):
+    """
+    Fixture for federation. This fixture is used to create the model owner, aggregator, and collaborators.
+    It also creates workspace.
+    Args:
+        request: pytest request object. Model name is passed as a parameter to the fixture from test cases.
+        pytestconfig: pytest config object
+    """
+    log.info("Fixture for federation")
+    # TODO - /etc/hosts file entry for the aggregator
+    log.info(f"Params are: {request.param}")
+    model_name = request.param
     args = parse_arguments()
-    num_collaborators = pytestconfig.getoption("--num-collaborators") or args.num_collaborators
-    num_rounds = pytestconfig.getoption("--num-rounds") or args.num_rounds
-    model_name = pytestconfig.getoption("--model-name") or args.model_name
+    results_dir = args.results_dir or pytestconfig.getini("results_dir")
+    num_collaborators = args.num_collaborators
+    num_rounds = args.num_rounds
+    collaborators = []
+    log.info(f"num_collaborators: {num_collaborators}, num_rounds: {num_rounds}, model_name: {model_name}")
+    workspace_name = f"workspace_{model_name}"
+    model_owner = participants.ModelOwner(workspace_name, model_name)
+    workspace_path = model_owner.create_workspace(results_dir=results_dir)
+    log.info(f"Created the workspace at {workspace_path}")
 
-    deployment = create_workspace(num_collaborators, global_config)
-    assert create_workspace, "Failed to create workspace"
-#     init_participants(deployment)
+    aggregator = participants.Aggregator(agg_domain_name="aggregator", workspace_path=workspace_path)
 
-#     utils_helper.create_ssh_key_pairs()
-#     if not deploy_federation(deployment, global_config['test_mode']):
-#         log.error("Deployment failed")
-#         delete_federation(deployment)
-#         log.info("Federation deleted")
-#         raise Exception("Deployment failed")
+    for i in range(num_collaborators):
+        collaborator = participants.Collaborator(collaborator_name=f"collaborator{i+1}", data_directory_path=i+1, workspace_path=workspace_path)
+        collaborators.append(collaborator)
 
-#     log.info("Deploying federation completed")
-
-#     # save the deployment information
-#     utils_helper.save_deployment(deployment)
-
-#     yield deployment
+    return federation_fixture(
+        model_owner=model_owner,
+        aggregator=aggregator,
+        collaborators=collaborators,
+        model_name=model_name,
+        workspace_path=workspace_path,
+        results_dir=results_dir,
+    )
 
 
 # @pytest.fixture(scope="module", autouse=True)
