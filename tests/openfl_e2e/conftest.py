@@ -14,7 +14,7 @@ from utils.conftest_helper import parse_arguments
 import utils.constants as constants
 import models.participants as participants
 
-federation_fixture = collections.namedtuple("federation_fixture", "model_owner, aggregator, collaborators, model_name, workspace_path, results_dir")
+federation_fixture = collections.namedtuple("federation_fixture", "model_owner, aggregator, collaborators, model_name, workspace_path, results_dir, use_existing_workspace")
 
 
 def pytest_addoption(parser):
@@ -31,6 +31,9 @@ def pytest_addoption(parser):
     )
     parser.addoption(
         "--model_name", action="store", type=str, default=constants.DEFAULT_MODEL_NAME, help="Model name"
+    )
+    parser.addoption(
+        "--use_existing_workspace", action="store_true", default=False, help="Whether to use existing workspace"
     )
 
 
@@ -228,8 +231,12 @@ def fx_federation(request, pytestconfig):
     log.info(f"num_collaborators: {num_collaborators}, num_rounds: {num_rounds}, model_name: {model_name}")
     workspace_name = f"workspace_{model_name}"
     model_owner = participants.ModelOwner(workspace_name, model_name)
-    workspace_path = model_owner.create_workspace(results_dir=results_dir)
-    log.info(f"Created the workspace at {workspace_path}")
+    if not args.use_existing_workspace:
+        workspace_path = model_owner.create_workspace(results_dir=results_dir)
+        log.info(f"Created the workspace at {workspace_path}")
+    else:
+        workspace_path = model_owner.get_workspace_path(results_dir=results_dir, workspace_name=workspace_name)
+        log.info(f"Using the existing workspace at {workspace_path}")
 
     aggregator = participants.Aggregator(agg_domain_name="aggregator", workspace_path=workspace_path)
 
@@ -244,6 +251,7 @@ def fx_federation(request, pytestconfig):
         model_name=model_name,
         workspace_path=workspace_path,
         results_dir=results_dir,
+        use_existing_workspace=args.use_existing_workspace
     )
 
 

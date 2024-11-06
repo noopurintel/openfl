@@ -53,15 +53,14 @@ class Aggregator():
 
     def start(self):
         try:
-            log.info(f"Starting the aggregator {self.agg_domain_name}")
+            log.info(f"Starting {self.agg_domain_name}")
             curr_time = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"{self.agg_domain_name}_{curr_time}.log"
             res_file = os.path.join(os.getcwd(), self.workspace_path, filename)
-            log.info(f"Results file: {res_file}")
             bg_file = open(res_file, "w", buffering=1)
 
             sh.run_command_background("fx aggregator start", work_dir=self.workspace_path, redirect_to_file=bg_file, check_sleep=60)
-            log.info(f"Started the aggregator {self.agg_domain_name}")
+            log.info(f"Started {self.agg_domain_name}")
         except Exception as e:
             log.error(f"Failed to start the aggregator: {e}")
             res_file.close()
@@ -113,11 +112,10 @@ class Collaborator():
 
     def start(self):
         try:
-            log.info(f"Starting the collaborator {self.collaborator_name}")
+            log.info(f"Starting {self.collaborator_name}")
             curr_time = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"{self.collaborator_name}_{curr_time}.log"
             res_file = os.path.join(os.getcwd(), self.workspace_path, filename)
-            log.info(f"Results file: {res_file} and type: {type(res_file)}")
             bg_file = open(res_file, "w", buffering=1)
 
             sh.run_command_background(f"fx collaborator start -n {self.collaborator_name}", work_dir=self.workspace_path, redirect_to_file=bg_file, check_sleep=60)
@@ -151,6 +149,17 @@ class ModelOwner():
         except Exception as e:
             log.error(f"Failed to create the workspace: {e}")
             raise e
+        return self.workspace_path
+
+    def get_workspace_path(self, results_dir, workspace_name):
+        workspace_path = os.path.join(results_dir, workspace_name)
+        log.info(f"Workspace path: {workspace_path}")
+        if os.path.exists(workspace_path):
+            self.workspace_path = workspace_path
+            log.info(f"Workspace path: {self.workspace_path}")
+        else:
+            log.error(f"Workspace {workspace_name} does not exist at {workspace_path}")
+            raise FileNotFoundError(f"Workspace {workspace_name} does not exist at {workspace_path}")
         return self.workspace_path
 
     def modify_plan(self, new_rounds=None, no_of_collaborators=None):

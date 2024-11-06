@@ -27,7 +27,7 @@ def parse_arguments():
         parser.add_argument("--num_collaborators", type=int, default=2, help="Number of collaborators")
         parser.add_argument("--num_rounds", type=int, default=5, help="Number of rounds to train")
         parser.add_argument("--model_name", type=str, default="torch_cnn_mnist", help="Model name")
-
+        parser.add_argument("--use_existing_workspace", action='store_true', default=False, help="Whether to use existing workspace")
         args = parser.parse_known_args()[0]
         return args
     except Exception as e:

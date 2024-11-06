@@ -14,25 +14,30 @@ def test_torch_cnn_mnist(fx_federation):
     """
     Test for torch_cnn_mnist model.
     """
-    log.info(f"Test for torch_cnn_mnist: {fx_federation}")
-    # Model owner operations
-    assert fx_federation.model_owner.initialize_plan(agg_domain_name="aggregator"), "Failed to initialize plan for aggregator"
-    assert fx_federation.model_owner.certify_workspace(), "Failed to certify workspace"
+    log.info(f"Test for torch_cnn_mnist with fx_federation: {fx_federation}")
 
-    # Aggregator operations
-    assert fx_federation.aggregator.generate_sign_request(), "Failed to generate sign request for aggregator"
-    assert fx_federation.aggregator.certify_request(), "Failed to certify request for aggregator"
+    # Check if the workspace is already created and call the respective functions accordingly
+    if not fx_federation.use_existing_workspace:
+        # Model owner operations
+        assert fx_federation.model_owner.initialize_plan(agg_domain_name="aggregator"), "Failed to initialize plan for aggregator"
+        assert fx_federation.model_owner.certify_workspace(), "Failed to certify workspace"
 
-    # Collaborator operations
-    for collaborator in fx_federation.collaborators:
-        log.info(f"Collaborator: {collaborator.collaborator_name}")
-        assert collaborator.create_collaborator(), f"Failed to create collaborator {collaborator.collaborator_name}"
-        assert collaborator.generate_sign_request(), f"Failed to generate sign request for collaborator {collaborator.collaborator_name}"
-        # Below step will add collaborator entries in cols.yaml file.
-        assert fx_federation.aggregator.sign_collaborator_csr(collaborator.collaborator_name), f"Failed to sign CSR for collaborator {collaborator.collaborator_name}"
-        assert collaborator.import_certify_csr(), f"Failed to import and certify CSR for collaborator {collaborator.collaborator_name}"
+        # Aggregator operations
+        assert fx_federation.aggregator.generate_sign_request(), "Failed to generate sign request for aggregator"
+        assert fx_federation.aggregator.certify_request(), "Failed to certify request for aggregator"
 
-    breakpoint()
+        # Collaborator operations
+        for collaborator in fx_federation.collaborators:
+            log.info(f"Performing operations for: {collaborator.collaborator_name}")
+            assert collaborator.create_collaborator(), f"Failed to create collaborator {collaborator.collaborator_name}"
+            assert collaborator.generate_sign_request(), f"Failed to generate sign request for collaborator {collaborator.collaborator_name}"
+            # Below step will add collaborator entries in cols.yaml file.
+            assert fx_federation.aggregator.sign_collaborator_csr(collaborator.collaborator_name), f"Failed to sign CSR for collaborator {collaborator.collaborator_name}"
+            assert collaborator.import_certify_csr(), f"Failed to import and certify CSR for collaborator {collaborator.collaborator_name}"
+    else:
+        # If the workspace is already created, then we need to import the existing workspace
+        # assert fx_federation.model_owner.import_workspace(), "Failed to import workspace"
+        log.info("Using existing workspace")
 
     # Start the collaborators and aggregator
     executor = concurrent.futures.ThreadPoolExecutor()
@@ -71,7 +76,9 @@ def verify_federation_run_completion(fx_federation, results):
     # Result will contain a list of tuple of replica and operator objects.
     results = [f.result() for f in futures]
     log.info(f"Results: {results}")
-    return True
+
+    # If any of the participant failed, return False, else return True
+    return all(results)
 
 
 def _verify_completion_for_participant(participant, result_file):
@@ -93,7 +100,14 @@ def _verify_completion_for_participant(participant, result_file):
         with open(result_file, 'r') as file:
             content = file.read()
         log.info(f"Process is yet to complete for {participant.name}")
-        time.sleep(30)
+        time.sleep(45)
+    
+    if "OK" not in content:
+        log.error(f"Process failed/incomplete for {participant.name} after timeout of {timeout} seconds")
+        return False
+    else:
+        log.info(f"Process completed for {participant.name} in {time.time() - start_time} seconds")
+        return True
 
 
 # @pytest.mark.parametrize('fx_federation', ['torch_cnn_histology'], indirect=True)
