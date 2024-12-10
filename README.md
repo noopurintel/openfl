@@ -113,3 +113,21 @@ This project is licensed under [Apache License Version 2.0](LICENSE). By contrib
 	publisher={IOP Publishing}
 }
 ```
+
+## Memory Logs
+
+OpenFL now includes the ability to log memory usage during federated learning experiments. This can be useful for monitoring and debugging purposes.
+
+### New `--log_memory_usage` Option
+
+A new command line option `--log_memory_usage` has been added to enable memory usage logging. When this option is used, memory usage will be logged throughout the experiment.
+
+### How to Use the `--log_memory_usage` Option
+
+To enable memory usage logging, simply add the `--log_memory_usage` option when running your tests. For example:
+
+```sh
+python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py --num_rounds 5 --num_collaborators 3 --model_name torch_cnn_mnist --disable_tls --log_memory_usage
+```
+
+This will enable memory usage logging for the specified test case.
