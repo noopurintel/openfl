@@ -4,8 +4,9 @@
 name: Interactive API - Tensorflow MNIST
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+  # pull_request:
+  #   types: [opened, synchronize, reopened, ready_for_review]
+  workflow_call:
 
 permissions:
   contents: read
