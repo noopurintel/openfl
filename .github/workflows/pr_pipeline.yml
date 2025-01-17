@@ -75,6 +75,26 @@ jobs:
     if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
     name: Task Runner
     uses: ./.github/workflows/taskrunner.yml
+  
+  docker_bench_security:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: Docker Bench Security
+    uses: ./.github/workflows/docker-bench-security.yml
+
+  double_workspace_export:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: Double Workspace Export
+    uses: ./.github/workflows/double_ws_export.yml
+
+  gandlf_taskrunner:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: Gandlf TaskRunner
+    uses: ./.github/workflows/gandlf.yml
+
+  check_code_format:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: Check Code Format
+    uses: ./.github/workflows/lint.yml
 
   pipeline_status:
     runs-on: ubuntu-22.04
@@ -92,7 +112,11 @@ jobs:
         tr_docker_native,
         tr_docker_gramine_direct,
         private_key_infrastructure,
-        task_runner
+        task_runner,
+        docker_bench_security,
+        double_workspace_export,
+        gandlf_taskrunner,
+        check_code_format
       ]
     steps:
       - name: Fail job if any of the above jobs have failed
@@ -108,7 +132,11 @@ jobs:
           (needs.tr_docker_native.result != 'success' && needs.tr_docker_native.result != 'skipped') ||
           (needs.tr_docker_gramine_direct.result != 'success' && needs.tr_docker_gramine_direct.result != 'skipped') ||
           (needs.private_key_infrastructure.result != 'success' && needs.private_key_infrastructure.result != 'skipped') ||
-          (needs.task_runner.result != 'success' && needs.task_runner.result != 'skipped')
+          (needs.task_runner.result != 'success' && needs.task_runner.result != 'skipped') ||
+          (needs.docker_bench_security.result != 'success' && needs.docker_bench_security.result != 'skipped') ||
+          (needs.double_workspace_export.result != 'success' && needs.double_workspace_export.result != 'skipped') ||
+          (needs.gandlf_taskrunner.result != 'success' && needs.gandlf_taskrunner.result != 'skipped') ||
+          (needs.check_code_format.result != 'success' && needs.check_code_format.result != 'skipped')
         run: |
           echo "federated_runtime_301_watermarking_notebook status - ${{ needs.federated_runtime_301_watermarking_notebook.result }}"
           echo "workflow_interface_101_mnist status - ${{ needs.workflow_interface_101_mnist.result }}"
@@ -122,6 +150,10 @@ jobs:
           echo "tr_docker_gramine_direct status - ${{ needs.tr_docker_gramine_direct.result }}"
           echo "private_key_infrastructure status - ${{ needs.private_key_infrastructure.result }}"
           echo "task_runner status - ${{ needs.task_runner.result }}"
+          echo "docker_bench_security status - ${{ needs.docker_bench_security.result }}"
+          echo "double_workspace_export status - ${{ needs.double_workspace_export.result }}"
+          echo "gandlf_taskrunner status - ${{ needs.gandlf_taskrunner.result }}"
+          echo "check_code_format status - ${{ needs.check_code_format.result }}"
           echo "One or more jobs failed. Exiting pipeline."
           exit 1
       - name: Print pipeline status
