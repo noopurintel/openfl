@@ -42,7 +42,7 @@ jobs:
     uses: ./.github/workflows/pytest_coverage.yml
 
   interactive_kvasir:
-    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
     name: Interactive API - Pytorch Kvasir UNet
     uses: ./.github/workflows/interactive-kvasir.yml
 
