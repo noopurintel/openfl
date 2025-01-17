@@ -1,0 +1,51 @@
+name: OpenFL PR Pipeline
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.base_ref }}-${{ github.head_ref }}-${{ github.actor }}
+  cancel-in-progress: true
+
+jobs:
+  federated_runtime_301_watermarking_notebook:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: Federated Runtime 301 MNIST Watermarking
+    uses: ./.github/workflows/federated_runtime.yml
+
+  workflow_interface_101_mnist:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    needs: federated_runtime_301_watermarking_notebook
+    name: Workflow Interface 101 MNIST
+    uses: ./.github/workflows/workflow_interface_101_mnist.yml
+
+  wf_functional_e2e:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    needs: workflow_interface_101_mnist
+    name: Workflow Functional E2E
+    uses: ./.github/workflows/wf_functional_e2e.yml
+
+  pipeline_status:
+    runs-on: ubuntu-22.04
+    if: ${{ github.event.pull_request.draft == false && always() }}
+    needs: [federated_runtime_301_watermarking_notebook, workflow_interface_101_mnist, wf_functional_e2e]
+    steps:
+      - name: Fail job if any of the above jobs have failed
+        if: |
+          (needs.federated_runtime_301_watermarking_notebook.outcome != 'success') ||
+          (needs.workflow_interface_101_mnist.outcome != 'success') ||
+          (needs.wf_functional_e2e.outcome != 'success')
+        run: |
+          echo "One of the jobs failed. Exiting..."
+          exit 1
+      - name: Print pipeline status
+        run: |
+          echo "All jobs passed. Pipeline completed successfully."
