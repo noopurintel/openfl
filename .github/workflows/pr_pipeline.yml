@@ -16,65 +16,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  federated_runtime_301_watermarking_notebook:
+  check_code_format:
     if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
-    name: Federated Runtime 301 MNIST Watermarking
-    uses: ./.github/workflows/federated_runtime.yml
-
-  workflow_interface_101_mnist:
-    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
-    name: Workflow Interface 101 MNIST
-    uses: ./.github/workflows/workflow_interface_101_mnist.yml
-
-  wf_functional_e2e:
-    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
-    name: Workflow Functional E2E
-    uses: ./.github/workflows/wf_functional_e2e.yml
-
-  straggler_handling:
-    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
-    name: Straggler Handling Test
-    uses: ./.github/workflows/straggler-handling.yml
-
-  pytest_coverage:
-    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
-    name: Pytest and code coverage
-    uses: ./.github/workflows/pytest_coverage.yml
-
-  interactive_kvasir:
-    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
-    name: Interactive API - Pytorch Kvasir UNet
-    uses: ./.github/workflows/interactive-kvasir.yml
-
-  interactive_tensorflow:
-    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
-    name: Interactive API - Tensorflow MNIST
-    uses: ./.github/workflows/interactive-tensorflow.yml
-
-  taskrunner_eden_compression:
-    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
-    name: TaskRunner (Eden Compression)
-    uses: ./.github/workflows/taskrunner_eden_pipeline.yml
-
-  tr_docker_native:
-    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
-    name: TaskRunner (docker/native)
-    uses: ./.github/workflows/tr_docker_native.yml
-
-  tr_docker_gramine_direct:
-    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
-    name: TaskRunner (docker/gramine-direct)
-    uses: ./.github/workflows/tr_docker_gramine_direct.yml
-
-  private_key_infrastructure:
-    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
-    name: Private Key Infrastructure
-    uses: ./.github/workflows/pki.yml
-  
-  task_runner:
-    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
-    name: Task Runner
-    uses: ./.github/workflows/taskrunner.yml
+    name: Check Code Format
+    uses: ./.github/workflows/lint.yml
   
   docker_bench_security:
     if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
@@ -86,74 +31,113 @@ jobs:
     name: Double Workspace Export
     uses: ./.github/workflows/double_ws_export.yml
 
+  federated_runtime_301_watermarking_notebook:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: Federated Runtime 301 MNIST Watermarking
+    uses: ./.github/workflows/federated_runtime.yml
+
   gandlf_taskrunner:
     if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
     name: Gandlf TaskRunner
     uses: ./.github/workflows/gandlf.yml
 
-  check_code_format:
+  private_key_infrastructure:
     if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
-    name: Check Code Format
-    uses: ./.github/workflows/lint.yml
+    name: Private Key Infrastructure
+    uses: ./.github/workflows/pki.yml
+
+  pytest_coverage:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: Pytest and code coverage
+    uses: ./.github/workflows/pytest_coverage.yml
+
+  straggler_handling:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: Straggler Handling Test
+    uses: ./.github/workflows/straggler-handling.yml
+
+  task_runner:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: Task Runner
+    uses: ./.github/workflows/taskrunner.yml
+
+  taskrunner_eden_compression:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: TaskRunner (Eden Compression)
+    uses: ./.github/workflows/taskrunner_eden_pipeline.yml
+
+  tr_docker_gramine_direct:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: TaskRunner (docker/gramine-direct)
+    uses: ./.github/workflows/tr_docker_gramine_direct.yml
+
+  tr_docker_native:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: TaskRunner (docker/native)
+    uses: ./.github/workflows/tr_docker_native.yml
+
+  wf_functional_e2e:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: Workflow Functional E2E
+    uses: ./.github/workflows/wf_functional_e2e.yml
+
+  workflow_interface_101_mnist:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: Workflow Interface 101 MNIST
+    uses: ./.github/workflows/workflow_interface_101_mnist.yml
 
   pipeline_status:
     runs-on: ubuntu-22.04
     if: ${{ github.event.pull_request.draft == false && always() }}
     needs:
       [
-        federated_runtime_301_watermarking_notebook,
-        workflow_interface_101_mnist,
-        wf_functional_e2e,
-        straggler_handling,
-        pytest_coverage,
-        interactive_kvasir,
-        interactive_tensorflow,
-        taskrunner_eden_compression,
-        tr_docker_native,
-        tr_docker_gramine_direct,
-        private_key_infrastructure,
-        task_runner,
+        check_code_format,
         docker_bench_security,
         double_workspace_export,
         gandlf_taskrunner,
-        check_code_format
+        federated_runtime_301_watermarking_notebook,
+        private_key_infrastructure,
+        pytest_coverage,
+        straggler_handling,
+        task_runner,
+        taskrunner_eden_compression,
+        tr_docker_gramine_direct,
+        tr_docker_native,
+        wf_functional_e2e,
+        workflow_interface_101_mnist,
       ]
     steps:
       - name: Fail job if any of the above jobs have failed
         if: |
-          (needs.federated_runtime_301_watermarking_notebook.result != 'success' && needs.federated_runtime_301_watermarking_notebook.result != 'skipped') ||
-          (needs.workflow_interface_101_mnist.result != 'success' && needs.workflow_interface_101_mnist.result != 'skipped') ||
-          (needs.wf_functional_e2e.result != 'success' && needs.wf_functional_e2e.result != 'skipped') ||
-          (needs.straggler_handling.result != 'success' && needs.straggler_handling.result != 'skipped') ||
-          (needs.pytest_coverage.result != 'success' && needs.pytest_coverage.result != 'skipped') ||
-          (needs.interactive_kvasir.result != 'success' && needs.interactive_kvasir.result != 'skipped') ||
-          (needs.interactive_tensorflow.result != 'success' && needs.interactive_tensorflow.result != 'skipped') ||
-          (needs.taskrunner_eden_compression.result != 'success' && needs.taskrunner_eden_compression.result != 'skipped') ||
-          (needs.tr_docker_native.result != 'success' && needs.tr_docker_native.result != 'skipped') ||
-          (needs.tr_docker_gramine_direct.result != 'success' && needs.tr_docker_gramine_direct.result != 'skipped') ||
-          (needs.private_key_infrastructure.result != 'success' && needs.private_key_infrastructure.result != 'skipped') ||
-          (needs.task_runner.result != 'success' && needs.task_runner.result != 'skipped') ||
+          (needs.check_code_format.result != 'success' && needs.check_code_format.result != 'skipped') ||
           (needs.docker_bench_security.result != 'success' && needs.docker_bench_security.result != 'skipped') ||
           (needs.double_workspace_export.result != 'success' && needs.double_workspace_export.result != 'skipped') ||
+          (needs.federated_runtime_301_watermarking_notebook.result != 'success' && needs.federated_runtime_301_watermarking_notebook.result != 'skipped') ||
           (needs.gandlf_taskrunner.result != 'success' && needs.gandlf_taskrunner.result != 'skipped') ||
-          (needs.check_code_format.result != 'success' && needs.check_code_format.result != 'skipped')
+          (needs.private_key_infrastructure.result != 'success' && needs.private_key_infrastructure.result != 'skipped') ||
+          (needs.pytest_coverage.result != 'success' && needs.pytest_coverage.result != 'skipped') ||
+          (needs.straggler_handling.result != 'success' && needs.straggler_handling.result != 'skipped') ||
+          (needs.task_runner.result != 'success' && needs.task_runner.result != 'skipped') ||
+          (needs.taskrunner_eden_compression.result != 'success' && needs.taskrunner_eden_compression.result != 'skipped') ||
+          (needs.tr_docker_gramine_direct.result != 'success' && needs.tr_docker_gramine_direct.result != 'skipped') ||
+          (needs.tr_docker_native.result != 'success' && needs.tr_docker_native.result != 'skipped') ||
+          (needs.wf_functional_e2e.result != 'success' && needs.wf_functional_e2e.result != 'skipped') ||
+          (needs.workflow_interface_101_mnist.result != 'success' && needs.workflow_interface_101_mnist.result != 'skipped')
         run: |
-          echo "federated_runtime_301_watermarking_notebook status - ${{ needs.federated_runtime_301_watermarking_notebook.result }}"
-          echo "workflow_interface_101_mnist status - ${{ needs.workflow_interface_101_mnist.result }}"
-          echo "wf_functional_e2e status - ${{ needs.wf_functional_e2e.result }}"
-          echo "straggler_handling status - ${{ needs.straggler_handling.result }}"
-          echo "pytest_coverage status - ${{ needs.pytest_coverage.result }}"
-          echo "interactive_kvasir status - ${{ needs.interactive_kvasir.result }}"
-          echo "interactive_tensorflow status - ${{ needs.interactive_tensorflow.result }}"
-          echo "taskrunner_eden_compression status - ${{ needs.taskrunner_eden_compression.result }}"
-          echo "tr_docker_native status - ${{ needs.tr_docker_native.result }}"
-          echo "tr_docker_gramine_direct status - ${{ needs.tr_docker_gramine_direct.result }}"
-          echo "private_key_infrastructure status - ${{ needs.private_key_infrastructure.result }}"
-          echo "task_runner status - ${{ needs.task_runner.result }}"
+          echo "check_code_format status - ${{ needs.check_code_format.result }}"
           echo "docker_bench_security status - ${{ needs.docker_bench_security.result }}"
           echo "double_workspace_export status - ${{ needs.double_workspace_export.result }}"
+          echo "federated_runtime_301_watermarking_notebook status - ${{ needs.federated_runtime_301_watermarking_notebook.result }}"
           echo "gandlf_taskrunner status - ${{ needs.gandlf_taskrunner.result }}"
-          echo "check_code_format status - ${{ needs.check_code_format.result }}"
+          echo "private_key_infrastructure status - ${{ needs.private_key_infrastructure.result }}"
+          echo "pytest_coverage status - ${{ needs.pytest_coverage.result }}"
+          echo "straggler_handling status - ${{ needs.straggler_handling.result }}"
+          echo "task_runner status - ${{ needs.task_runner.result }}"
+          echo "taskrunner_eden_compression status - ${{ needs.taskrunner_eden_compression.result }}"
+          echo "tr_docker_gramine_direct status - ${{ needs.tr_docker_gramine_direct.result }}"
+          echo "tr_docker_native status - ${{ needs.tr_docker_native.result }}"
+          echo "wf_functional_e2e status - ${{ needs.wf_functional_e2e.result }}"
+          echo "workflow_interface_101_mnist status - ${{ needs.workflow_interface_101_mnist.result }}"
           echo "One or more jobs failed. Exiting pipeline."
           exit 1
       - name: Print pipeline status
