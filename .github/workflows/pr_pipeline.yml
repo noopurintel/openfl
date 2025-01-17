@@ -6,11 +6,6 @@ on:
   workflow_dispatch:
   workflow_call:
 
-# permissions:
-#   contents: read
-#   pull-requests: read
-#   actions: write
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.base_ref }}-${{ github.head_ref }}-${{ github.actor }}
   cancel-in-progress: true

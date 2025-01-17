@@ -30,7 +30,13 @@ jobs:
     - name: Temporary steps
       run: |
         echo "Temporary steps"
-        echo ${{ vars.PRINT_MY_NAME }}
+        echo ${{ vars.VERSION_1_7 }}
+        if [ "${{ vars.VERSION_1_7 }}" != "1.7" ]; then
+          echo "VERSION_1_7 is not 1.7. Exiting."
+          exit 1
+        else
+          echo "VERSION_1_7 is 1.7."
+        fi
 
     # - name: Set up Python
     #   uses: actions/setup-python@v3
