@@ -23,13 +23,11 @@ jobs:
 
   workflow_interface_101_mnist:
     if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
-    needs: federated_runtime_301_watermarking_notebook
     name: Workflow Interface 101 MNIST
     uses: ./.github/workflows/workflow_interface_101_mnist.yml
 
   wf_functional_e2e:
     if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
-    needs: workflow_interface_101_mnist
     name: Workflow Functional E2E
     uses: ./.github/workflows/wf_functional_e2e.yml
 
