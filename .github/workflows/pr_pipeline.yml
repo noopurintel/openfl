@@ -16,6 +16,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  bandit_code_scan:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: Bandit Code Scan
+    uses: ./.github/workflows/bandit.yml
+
   check_code_format:
     if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
     name: Check Code Format
@@ -66,6 +71,11 @@ jobs:
     name: TaskRunner (Eden Compression)
     uses: ./.github/workflows/taskrunner_eden_pipeline.yml
 
+  trivy_scan:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: Trivy Scan
+    uses: ./.github/workflows/trivy.yml
+
   tr_docker_gramine_direct:
     if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
     name: TaskRunner (docker/gramine-direct)
@@ -86,11 +96,18 @@ jobs:
     name: Workflow Interface 101 MNIST
     uses: ./.github/workflows/workflow_interface_101_mnist.yml
 
+  workflow_interface_tests:
+    if: ${{ ! failure() && ! cancelled() && github.event.pull_request.draft == false }}
+    name: Workflow Interface Tests
+    uses: ./.github/workflows/experimental_workflow_tests.yml
+
   pipeline_status:
     runs-on: ubuntu-22.04
+    name: Pipeline Status
     if: ${{ github.event.pull_request.draft == false && always() }}
     needs:
       [
+        bandit_code_scan,
         check_code_format,
         docker_bench_security,
         double_workspace_export,
@@ -101,14 +118,17 @@ jobs:
         straggler_handling,
         task_runner,
         taskrunner_eden_compression,
+        trivy_scan,
         tr_docker_gramine_direct,
         tr_docker_native,
         wf_functional_e2e,
         workflow_interface_101_mnist,
+        workflow_interface_tests,
       ]
     steps:
       - name: Fail job if any of the above jobs have failed
         if: |
+          (needs.bandit_code_scan.result != 'success' && needs.bandit_code_scan.result != 'skipped') ||
           (needs.check_code_format.result != 'success' && needs.check_code_format.result != 'skipped') ||
           (needs.docker_bench_security.result != 'success' && needs.docker_bench_security.result != 'skipped') ||
           (needs.double_workspace_export.result != 'success' && needs.double_workspace_export.result != 'skipped') ||
@@ -119,11 +139,14 @@ jobs:
           (needs.straggler_handling.result != 'success' && needs.straggler_handling.result != 'skipped') ||
           (needs.task_runner.result != 'success' && needs.task_runner.result != 'skipped') ||
           (needs.taskrunner_eden_compression.result != 'success' && needs.taskrunner_eden_compression.result != 'skipped') ||
+          (needs.trivy_scan.result != 'success' && needs.trivy_scan.result != 'skipped') ||
           (needs.tr_docker_gramine_direct.result != 'success' && needs.tr_docker_gramine_direct.result != 'skipped') ||
           (needs.tr_docker_native.result != 'success' && needs.tr_docker_native.result != 'skipped') ||
           (needs.wf_functional_e2e.result != 'success' && needs.wf_functional_e2e.result != 'skipped') ||
-          (needs.workflow_interface_101_mnist.result != 'success' && needs.workflow_interface_101_mnist.result != 'skipped')
+          (needs.workflow_interface_101_mnist.result != 'success' && needs.workflow_interface_101_mnist.result != 'skipped') ||
+          (needs.workflow_interface_tests.result != 'success' && needs.workflow_interface_tests.result != 'skipped')
         run: |
+          echo "bandit_code_scan status - ${{ needs.bandit_code_scan.result }}"
           echo "check_code_format status - ${{ needs.check_code_format.result }}"
           echo "docker_bench_security status - ${{ needs.docker_bench_security.result }}"
           echo "double_workspace_export status - ${{ needs.double_workspace_export.result }}"
@@ -134,10 +157,12 @@ jobs:
           echo "straggler_handling status - ${{ needs.straggler_handling.result }}"
           echo "task_runner status - ${{ needs.task_runner.result }}"
           echo "taskrunner_eden_compression status - ${{ needs.taskrunner_eden_compression.result }}"
+          echo "trivy_scan status - ${{ needs.trivy_scan.result }}"
           echo "tr_docker_gramine_direct status - ${{ needs.tr_docker_gramine_direct.result }}"
           echo "tr_docker_native status - ${{ needs.tr_docker_native.result }}"
           echo "wf_functional_e2e status - ${{ needs.wf_functional_e2e.result }}"
           echo "workflow_interface_101_mnist status - ${{ needs.workflow_interface_101_mnist.result }}"
+          echo "workflow_interface_tests status - ${{ needs.workflow_interface_tests.result }}"
           echo "One or more jobs failed. Exiting pipeline."
           exit 1
       - name: Print pipeline status

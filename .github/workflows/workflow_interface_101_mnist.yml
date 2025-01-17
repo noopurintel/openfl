@@ -26,6 +26,11 @@ jobs:
         fetch-depth: 2 # needed for detecting changes
         submodules: "true"
         token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Temporary steps
+      run: |
+        echo "Temporary steps"
+        echo ${{ vars.PRINT_MY_NAME }}
 
     # - name: Set up Python
     #   uses: actions/setup-python@v3

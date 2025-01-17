@@ -5,8 +5,9 @@ on:
     branches: 
       - develop
       - v1.7.x
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+  # pull_request:
+  #   types: [opened, synchronize, reopened, ready_for_review]
+  workflow_call:
 
 jobs:
   bandit_scan:
