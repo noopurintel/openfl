@@ -6,6 +6,8 @@ name: Task_Runner_E2E  # Please do not modify the name as it is used in the comp
 on:
   schedule:
     - cron: "0 0 * * *" # Run every day at midnight
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
     inputs:
       num_rounds:

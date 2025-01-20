@@ -1,9 +1,10 @@
 name: Docker Bench for Security
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-
+  # pull_request:
+  #   types: [opened, synchronize, reopened, ready_for_review]
+  schedule:
+    - cron: "0 0 * * *" # Run every day at midnight
 permissions:
   contents: read
 
