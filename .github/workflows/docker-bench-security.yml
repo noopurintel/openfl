@@ -16,6 +16,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Temporary steps
+      run: |
+        echo "Temporary steps"
+        echo ${{ vars.VERSION_1_8 }}
+        if [ "${{ vars.VERSION_1_8 }}" != "1.8" ]; then
+          echo "VERSION_1_8 is not 1.8. Exiting."
+          exit 1
+        else
+          echo "VERSION_1_8 is 1.8."
+        fi
     - name: Set up Python 3
       uses: actions/setup-python@v3
       with:
