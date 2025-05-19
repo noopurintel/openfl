@@ -299,7 +299,7 @@ def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
         # Stop further processing in case of final round.
         if current_round + 1 == total_rounds:
             break
-
+        time.sleep(20)
         # # Restart collaborators and validate
         # current_round = _restart_and_validate(
         #     fed_obj.collaborators, current_round, db_file, total_rounds, "collaborators", attempt=i
