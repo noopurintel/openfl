@@ -4,6 +4,7 @@
 """Aggregator module."""
 
 import sys
+import traceback
 from logging import getLogger
 from pathlib import Path
 
@@ -71,29 +72,51 @@ def aggregator(context):
 )
 def start_(plan, authorized_cols, task_group):
     """Starts the aggregator service."""
-    if is_directory_traversal(plan):
-        echo("Federated learning plan path is out of the openfl workspace scope.")
-        sys.exit(1)
-    if is_directory_traversal(authorized_cols):
-        echo("Authorized collaborator list file path is out of the openfl workspace scope.")
-        sys.exit(1)
-
-    # Parse plan and override mode if specified
-    parsed_plan = Plan.parse(
-        plan_config_path=Path(plan).absolute(),
-        cols_config_path=Path(authorized_cols).absolute(),
+    logger.info("fx aggregator start: CLI entrypoint invoked.")
+    logger.info(
+        "fx aggregator start: plan=%s, authorized_cols=%s, task_group=%s",
+        plan,
+        authorized_cols,
+        task_group,
     )
+    try:
+        if is_directory_traversal(plan):
+            echo("Federated learning plan path is out of the openfl workspace scope.")
+            sys.exit(1)
+        if is_directory_traversal(authorized_cols):
+            echo("Authorized collaborator list file path is out of the openfl workspace scope.")
+            sys.exit(1)
 
-    # Set task_group in assigner settings if provided
-    if task_group:
-        if "settings" not in parsed_plan.config["assigner"]:
-            parsed_plan.config["assigner"]["settings"] = {}
-        parsed_plan.config["assigner"]["settings"]["selected_task_group"] = task_group
-        logger.info(f"Setting aggregator to assign: {task_group} task_group")
+        logger.info("fx aggregator start: Parsing plan and authorized collaborators...")
+        parsed_plan = Plan.parse(
+            plan_config_path=Path(plan).absolute(),
+            cols_config_path=Path(authorized_cols).absolute(),
+        )
 
-    logger.info("🧿 Starting the Aggregator Service.")
+        # Set task_group in assigner settings if provided
+        if task_group:
+            if "settings" not in parsed_plan.config["assigner"]:
+                parsed_plan.config["assigner"]["settings"] = {}
+            parsed_plan.config["assigner"]["settings"]["selected_task_group"] = task_group
+            logger.info("Setting aggregator to assign: %s task_group", task_group)
 
-    parsed_plan.get_server().serve()
+        logger.info("🧿 Starting the Aggregator Service.")
+        logger.info("fx aggregator start: Calling parsed_plan.get_server().serve() ...")
+        parsed_plan.get_server().serve()
+        logger.info("fx aggregator start: Aggregator service exited normally.")
+    except Exception as e:
+        logger.error("fx aggregator start: Exception occurred: %s", str(e))
+        logger.error("fx aggregator start: Traceback:\n%s", traceback.format_exc())
+        sys.exit(1)
+    except SystemExit as se:
+        logger.info("fx aggregator start: SystemExit: %s", str(se))
+        raise
+    except BaseException as be:
+        logger.critical("fx aggregator start: BaseException: %s", str(be))
+        logger.critical("fx aggregator start: Traceback:\n%s", traceback.format_exc())
+        sys.exit(2)
+    finally:
+        logger.info("fx aggregator start: CLI entrypoint exiting.")
 
 
 @aggregator.command(name="generate-cert-request")
